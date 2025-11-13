@@ -16,6 +16,7 @@ KERNEL_TEMPLATE = """// Auto-generated kernel instantiation file
 #include "../hopper/flash_fwd_launch_template.h"
 
 // Single kernel instantiation per file
+// Template parameters: Arch, T, kHeadDim, kHeadDimV, Split, PagedKVNonTMA, Has_softcap, PackGQA
 template void run_mha_fwd_<{sm_arch}, {dtype}, {hdim}, {hdim}, false, false, false, false>
     (Flash_fwd_params &params, cudaStream_t stream);
 """

@@ -17,8 +17,9 @@ namespace flash {
 
 // Forward declarations of kernel templates
 // These are instantiated in separate kernel_*.cu files
-template<int Sm_arch, typename DType, int Headdim, int HeaddimK,
-         bool Is_causal, bool Is_local, bool Has_window, bool Varlen>
+// Template parameters: Arch, T, kHeadDim, kHeadDimV, Split, PagedKVNonTMA, Has_softcap, PackGQA
+template<int Arch, typename T, int kHeadDim, int kHeadDimV,
+         bool Split, bool PagedKVNonTMA, bool Has_softcap, bool PackGQA>
 void run_mha_fwd_(Flash_fwd_params &params, cudaStream_t stream);
 
 // Helper to select and call the right kernel
@@ -100,7 +101,8 @@ int flash_attention_forward(
         scale = 1.0f / sqrtf(static_cast<float>(params.head_dim));
     }
     flash_params.scale_softmax = scale;
-    flash_params.scale_softmax_log2 = scale * M_LOG2E;
+    // Note: scale_softmax_log2 was removed in newer versions
+    // The kernel now computes this internally if needed
 
     // Set causal
     flash_params.is_causal = params.is_causal;

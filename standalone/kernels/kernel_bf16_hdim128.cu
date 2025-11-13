@@ -5,5 +5,6 @@
 #include "../hopper/flash_fwd_launch_template.h"
 
 // Single kernel instantiation per file
+// Template parameters: Arch, T, kHeadDim, kHeadDimV, Split, PagedKVNonTMA, Has_softcap, PackGQA
 template void run_mha_fwd_<90, cutlass::bfloat16_t, 128, 128, false, false, false, false>
     (Flash_fwd_params &params, cudaStream_t stream);
