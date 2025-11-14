@@ -50,14 +50,11 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Kernel configurations for Qwen2.5-VL-3B
+    # Only FP16 and FP8, no BF16
     configs = [
         # FP16 configurations
         ('fp16', 'cutlass::half_t', 128),      # Primary config for Qwen2.5-VL
         ('fp16', 'cutlass::half_t', 256),      # Alternative config
-
-        # BF16 configurations
-        ('bf16', 'cutlass::bfloat16_t', 128),
-        ('bf16', 'cutlass::bfloat16_t', 256),
 
         # FP8 E4M3 configurations (for inference)
         ('fp8_e4m3', 'cutlass::float_e4m3_t', 128),

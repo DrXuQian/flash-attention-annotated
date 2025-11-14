@@ -66,9 +66,9 @@ class NinjaBuild(build_ext):
         hopper_kernels = glob.glob(str(Path(parent_dir) / "hopper" / "instantiations" / "*.cu"))
 
         # Filter for the kernels we need (Qwen2.5-VL configuration)
+        # Only FP16 and FP8, no BF16
         needed_kernels = [
             "flash_fwd_hdim128_fp16_sm90.cu",
-            "flash_fwd_hdim128_bf16_sm90.cu",
             "flash_fwd_hdim128_e4m3_sm90.cu",
         ]
 

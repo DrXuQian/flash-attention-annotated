@@ -37,12 +37,11 @@ cd build_like_setup
 
 echo "Collecting Hopper kernel files..."
 # List of kernel files we need (for Qwen2.5-VL: hdim=128)
+# Only FP16 and FP8, no BF16
 KERNEL_FILES=(
     "../../hopper/instantiations/flash_fwd_hdim128_fp16_sm90.cu"
-    "../../hopper/instantiations/flash_fwd_hdim128_bf16_sm90.cu"
     "../../hopper/instantiations/flash_fwd_hdim128_e4m3_sm90.cu"
     "../../hopper/instantiations/flash_fwd_hdim128_fp16_split_sm90.cu"
-    "../../hopper/instantiations/flash_fwd_hdim128_bf16_split_sm90.cu"
     "../../hopper/instantiations/flash_fwd_hdim128_e4m3_split_sm90.cu"
 )
 

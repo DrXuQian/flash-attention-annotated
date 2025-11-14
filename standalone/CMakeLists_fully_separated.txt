@@ -88,11 +88,7 @@ add_kernel_library(kernel_fp16_hdim128
 add_kernel_library(kernel_fp16_hdim256
     ${CMAKE_CURRENT_SOURCE_DIR}/kernels/kernel_fp16_hdim256.cu)
 
-add_kernel_library(kernel_bf16_hdim128
-    ${CMAKE_CURRENT_SOURCE_DIR}/kernels/kernel_bf16_hdim128.cu)
-
-add_kernel_library(kernel_bf16_hdim256
-    ${CMAKE_CURRENT_SOURCE_DIR}/kernels/kernel_bf16_hdim256.cu)
+# BF16 kernels removed - only FP16 and FP8 needed
 
 add_kernel_library(kernel_fp8_e4m3_hdim128
     ${CMAKE_CURRENT_SOURCE_DIR}/kernels/kernel_fp8_e4m3_hdim128.cu)
@@ -114,12 +110,10 @@ set_target_properties(flash_api PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
-# Link all kernel libraries
+# Link all kernel libraries (no BF16)
 target_link_libraries(flash_api PUBLIC
     kernel_fp16_hdim128
     kernel_fp16_hdim256
-    kernel_bf16_hdim128
-    kernel_bf16_hdim256
     kernel_fp8_e4m3_hdim128
     CUDA::cudart
 )

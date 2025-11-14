@@ -34,7 +34,7 @@ echo ""
 
 # Build each kernel as a separate target
 # This ensures they never share compilation units
-for kernel in kernel_fp16_hdim128 kernel_fp16_hdim256 kernel_bf16_hdim128 kernel_bf16_hdim256 kernel_fp8_e4m3_hdim128; do
+for kernel in kernel_fp16_hdim128 kernel_fp16_hdim256 kernel_fp8_e4m3_hdim128; do
     echo "Building $kernel..."
     make $kernel -j1  # Use -j1 to ensure sequential build
     echo "✓ $kernel built successfully"

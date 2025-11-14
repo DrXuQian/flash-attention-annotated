@@ -124,8 +124,8 @@ int flash_attention_forward(
                 flash_params, params.head_dim, stream);
             break;
         case DataType::BF16:
-            result = dispatch_headdim<cutlass::bfloat16_t>(
-                flash_params, params.head_dim, stream);
+            std::cerr << "Error: BF16 is not supported in this build" << std::endl;
+            return -4;
             break;
         case DataType::FP8_E4M3:
             // FP8 only supports hdim=128 for now
