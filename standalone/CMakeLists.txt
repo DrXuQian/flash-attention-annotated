@@ -114,6 +114,20 @@ set_target_properties(flash_api PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# Scheduler for variable-length sequences
+add_library(flash_scheduler OBJECT
+    ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/flash_prepare_scheduler.cu
+)
+
+target_compile_options(flash_scheduler PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:${CUDA_FLAGS}>
+)
+
+set_target_properties(flash_scheduler PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    POSITION_INDEPENDENT_CODE ON
+)
+
 # ============================================================================
 # Main executable
 # ============================================================================
@@ -121,6 +135,7 @@ set_target_properties(flash_api PROPERTIES
 add_executable(flash_attention_exec
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     $<TARGET_OBJECTS:flash_api>
+    $<TARGET_OBJECTS:flash_scheduler>
     ${KERNEL_OBJECTS}
 )
 
