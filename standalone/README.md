@@ -75,7 +75,25 @@ The standalone version supports three types of attention:
 - **GQA (Grouped Query Attention)**: `num_kv_heads < num_heads` and `num_kv_heads > 1` (e.g., `-n 16 -v 2` for Qwen2.5-VL)
 - **MQA (Multi-Query Attention)**: `num_kv_heads == 1` (e.g., `-n 16 -v 1`)
 
-For Qwen2.5-VL-3B, use: `-n 16 -v 2` (16 query heads, 2 KV heads, 8:1 ratio)
+## Qwen2.5-VL-3B Configuration
+
+Qwen2.5-VL has two different attention configurations:
+
+### Language Model (LLM)
+- Query heads: 16
+- KV heads: 2 (GQA with 8:1 ratio)
+- Head dimension: 128
+- Usage: `./build/flash_attention_exec -n 16 -v 2 -m 128`
+
+### Vision Transformer (ViT)
+- Heads: 16 (MHA, no GQA)
+- Head dimension: **80** (not directly supported)
+- Hidden size: 1280
+
+**Note**: Flash Attention v3 supports head dimensions of 64, 96, 128, 192, and 256. For Vision with head_dim=80:
+- Option 1: Use `-m 96` with padding (closest match, 16 extra dimensions)
+- Option 2: Use `-m 128` with more padding (48 extra dimensions)
+- The actual ViT computation would need custom head_dim=80 kernel support
 
 ## Build Details
 

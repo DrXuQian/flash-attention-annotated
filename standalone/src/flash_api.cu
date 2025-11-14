@@ -28,8 +28,20 @@ static int dispatch_headdim(
     cudaStream_t stream
 ) {
     switch (head_dim) {
+        case 64:
+            run_mha_fwd_<90, DType, 64, 64, false, false, false, false>(
+                flash_params, stream);
+            return 0;
+        case 96:
+            run_mha_fwd_<90, DType, 96, 96, false, false, false, false>(
+                flash_params, stream);
+            return 0;
         case 128:
             run_mha_fwd_<90, DType, 128, 128, false, false, false, false>(
+                flash_params, stream);
+            return 0;
+        case 192:
+            run_mha_fwd_<90, DType, 192, 192, false, false, false, false>(
                 flash_params, stream);
             return 0;
         case 256:
@@ -38,7 +50,7 @@ static int dispatch_headdim(
             return 0;
         default:
             std::cerr << "Unsupported head_dim: " << head_dim
-                      << ". Supported values: 128, 256" << std::endl;
+                      << ". Supported values: 64, 96, 128, 192, 256" << std::endl;
             return -1;
     }
 }
@@ -53,9 +65,11 @@ int flash_attention_forward(
         return -1;
     }
 
-    if (params.head_dim != 128 && params.head_dim != 256) {
+    // Validate head_dim
+    if (params.head_dim != 64 && params.head_dim != 96 && params.head_dim != 128 &&
+        params.head_dim != 192 && params.head_dim != 256) {
         std::cerr << "Error: unsupported head_dim " << params.head_dim
-                  << ". Only 128 and 256 are supported." << std::endl;
+                  << ". Supported values: 64, 96, 128, 192, 256" << std::endl;
         return -2;
     }
 

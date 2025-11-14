@@ -20,7 +20,7 @@ void print_usage(const char* program_name) {
     std::cout << "  -n, --num-heads HEADS   Number of query attention heads (default: 16)\n";
     std::cout << "  -v, --num-kv-heads KV   Number of key-value heads for GQA (default: 16)\n";
     std::cout << "                          Use fewer than num-heads for GQA (e.g., 2 for Qwen2.5-VL)\n";
-    std::cout << "  -m, --head-dim DIM      Head dimension (128 or 256, default: 128)\n";
+    std::cout << "  -m, --head-dim DIM      Head dimension: 64, 96, 128, 192, 256 (default: 128)\n";
     std::cout << "  -c, --causal            Enable causal masking (default: false)\n\n";
     std::cout << "Examples:\n";
     std::cout << "  " << program_name << "                      # Run with defaults (MHA: 16 heads)\n";
@@ -140,8 +140,9 @@ int main(int argc, char** argv) {
         else if (arg == "-m" || arg == "--head-dim") {
             if (i + 1 < argc) {
                 head_dim = std::atoi(argv[++i]);
-                if (head_dim != 128 && head_dim != 256) {
-                    std::cerr << "Error: head_dim must be 128 or 256\n";
+                if (head_dim != 64 && head_dim != 96 && head_dim != 128 &&
+                    head_dim != 192 && head_dim != 256) {
+                    std::cerr << "Error: head_dim must be 64, 96, 128, 192, or 256\n";
                     return 1;
                 }
             }
