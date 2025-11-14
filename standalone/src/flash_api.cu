@@ -6,7 +6,8 @@
 
 #include "../include/flash_api.h"
 #include "../hopper/flash.h"
-#include "../hopper/flash_fwd_launch_template.h"
+// DO NOT include flash_fwd_launch_template.h - it causes multiple template instantiations
+// #include "../hopper/flash_fwd_launch_template.h"
 
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
@@ -15,9 +16,14 @@
 
 namespace flash {
 
-// Forward declarations of kernel templates
-// These are instantiated in separate kernel_*.cu files
+// External declarations of kernel templates
+// These are defined and instantiated in separate kernel_*.cu files
 // Template parameters: Arch, T, kHeadDim, kHeadDimV, Split, PagedKVNonTMA, Has_softcap, PackGQA
+extern "C" {
+    // Declare kernel functions as external C linkage to avoid name mangling issues
+}
+
+// Template forward declarations (not extern "C" as they are C++ templates)
 template<int Arch, typename T, int kHeadDim, int kHeadDimV,
          bool Split, bool PagedKVNonTMA, bool Has_softcap, bool PackGQA>
 void run_mha_fwd_(Flash_fwd_params &params, cudaStream_t stream);
