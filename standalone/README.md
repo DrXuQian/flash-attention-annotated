@@ -35,6 +35,9 @@ Standalone Flash Attention v3 for Hopper architecture (H100/H800/RTX 5090), extr
 # Custom configuration
 ./build/flash_attention_exec -b 2 -q 1024 -k 1024 -n 32
 
+# Qwen2.5-VL-3B with GQA (16 Q heads, 2 KV heads)
+./build/flash_attention_exec -n 16 -v 2
+
 # Enable causal attention
 ./build/flash_attention_exec -c
 ```
@@ -50,16 +53,29 @@ Options:
   -b, --batch SIZE        Batch size (default: 1)
   -q, --seqlen-q LENGTH   Query sequence length (default: 512)
   -k, --seqlen-k LENGTH   Key/Value sequence length (default: 512)
-  -n, --num-heads HEADS   Number of attention heads (default: 16)
+  -n, --num-heads HEADS   Number of query attention heads (default: 16)
+  -v, --num-kv-heads KV   Number of key-value heads for GQA (default: 16)
+                          Use fewer than num-heads for GQA (e.g., 2 for Qwen2.5-VL)
   -m, --head-dim DIM      Head dimension: 128 or 256 (default: 128)
   -c, --causal            Enable causal masking (default: false)
 
 Examples:
-  ./build/flash_attention_exec                   # Defaults
+  ./build/flash_attention_exec                   # Defaults (MHA)
   ./build/flash_attention_exec -d fp8            # FP8 mode
+  ./build/flash_attention_exec -n 16 -v 2        # GQA: 16 Q heads, 2 KV heads (Qwen2.5-VL)
   ./build/flash_attention_exec -b 2 -q 1024      # Batch=2, seqlen=1024
   ./build/flash_attention_exec -c                # Causal attention
 ```
+
+## Attention Mechanisms
+
+The standalone version supports three types of attention:
+
+- **MHA (Multi-Head Attention)**: `num_heads == num_kv_heads` (e.g., `-n 16 -v 16`)
+- **GQA (Grouped Query Attention)**: `num_kv_heads < num_heads` and `num_kv_heads > 1` (e.g., `-n 16 -v 2` for Qwen2.5-VL)
+- **MQA (Multi-Query Attention)**: `num_kv_heads == 1` (e.g., `-n 16 -v 1`)
+
+For Qwen2.5-VL-3B, use: `-n 16 -v 2` (16 query heads, 2 KV heads, 8:1 ratio)
 
 ## Build Details
 
