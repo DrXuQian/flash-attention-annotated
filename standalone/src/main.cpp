@@ -30,7 +30,7 @@ void print_usage(const char* program_name) {
     std::cout << "  " << program_name << " -c                  # Enable causal attention\n\n";
     std::cout << "Supported configurations:\n";
     std::cout << "  Data types: FP16, FP8_E4M3\n";
-    std::cout << "  Head dimensions: 128, 256\n";
+    std::cout << "  Head dimensions: 64, 96, 128, 192, 256\n";
     std::cout << "  Attention: MHA (num-heads == num-kv-heads) or GQA (num-kv-heads < num-heads)\n";
     std::cout << "  Architecture: Hopper (SM90a)\n";
 }
@@ -158,8 +158,8 @@ int main(int argc, char** argv) {
     }
 
     // Validate FP8 constraints
-    if (dtype == flash::DataType::FP8_E4M3 && head_dim != 128) {
-        std::cerr << "Error: FP8 E4M3 only supports head_dim=128\n";
+    if (dtype == flash::DataType::FP8_E4M3 && head_dim != 96 && head_dim != 128) {
+        std::cerr << "Error: FP8 E4M3 only supports head_dim=96 or 128\n";
         return 1;
     }
 

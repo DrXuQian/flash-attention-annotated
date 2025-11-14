@@ -56,7 +56,7 @@ Options:
   -n, --num-heads HEADS   Number of query attention heads (default: 16)
   -v, --num-kv-heads KV   Number of key-value heads for GQA (default: 16)
                           Use fewer than num-heads for GQA (e.g., 2 for Qwen2.5-VL)
-  -m, --head-dim DIM      Head dimension: 128 or 256 (default: 128)
+  -m, --head-dim DIM      Head dimension: 64, 96, 128, 192, 256 (default: 128)
   -c, --causal            Enable causal masking (default: false)
 
 Examples:
@@ -105,6 +105,8 @@ The build script:
 
 ### Kernel Files Used
 
+- `flash_fwd_hdim96_fp16_sm90.cu` - FP16, head_dim=96
+- `flash_fwd_hdim96_e4m3_sm90.cu` - FP8 E4M3, head_dim=96
 - `flash_fwd_hdim128_fp16_sm90.cu` - FP16, head_dim=128
 - `flash_fwd_hdim128_e4m3_sm90.cu` - FP8 E4M3, head_dim=128
 - `flash_fwd_hdim256_fp16_sm90.cu` - FP16, head_dim=256
@@ -171,10 +173,10 @@ target_link_libraries(your_app PRIVATE flash_attention_lib)
 
 ## Supported Configurations
 
-| Data Type | Head Dimensions | Architecture |
-|-----------|-----------------|--------------|
-| FP16      | 128, 256        | SM90a        |
-| FP8 E4M3  | 128             | SM90a        |
+| Data Type | Head Dimensions           | Architecture |
+|-----------|---------------------------|--------------|
+| FP16      | 64, 96, 128, 192, 256     | SM90a        |
+| FP8 E4M3  | 96, 128                   | SM90a        |
 
 **Note**: BF16 support removed per project requirements.
 
