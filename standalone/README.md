@@ -23,11 +23,42 @@ Standalone Flash Attention v3 for Hopper architecture (H100/H800/RTX 5090), extr
 # Build
 ./build.sh
 
-# Run test with FP16 (default)
+# Run with default settings (FP16, batch=1, seq=512, heads=16, dim=128)
 ./build/flash_attention_exec
 
-# Run test with FP8 E4M3
-./build/flash_attention_exec fp8
+# Show help
+./build/flash_attention_exec -h
+
+# Run with FP8 E4M3
+./build/flash_attention_exec -d fp8
+
+# Custom configuration
+./build/flash_attention_exec -b 2 -q 1024 -k 1024 -n 32
+
+# Enable causal attention
+./build/flash_attention_exec -c
+```
+
+## Command Line Options
+
+```
+Usage: flash_attention_exec [OPTIONS]
+
+Options:
+  -h, --help              Show help message
+  -d, --dtype TYPE        Data type: fp16, fp8 (default: fp16)
+  -b, --batch SIZE        Batch size (default: 1)
+  -q, --seqlen-q LENGTH   Query sequence length (default: 512)
+  -k, --seqlen-k LENGTH   Key/Value sequence length (default: 512)
+  -n, --num-heads HEADS   Number of attention heads (default: 16)
+  -m, --head-dim DIM      Head dimension: 128 or 256 (default: 128)
+  -c, --causal            Enable causal masking (default: false)
+
+Examples:
+  ./build/flash_attention_exec                   # Defaults
+  ./build/flash_attention_exec -d fp8            # FP8 mode
+  ./build/flash_attention_exec -b 2 -q 1024      # Batch=2, seqlen=1024
+  ./build/flash_attention_exec -c                # Causal attention
 ```
 
 ## Build Details
