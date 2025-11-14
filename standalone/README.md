@@ -23,8 +23,11 @@ Standalone Flash Attention v3 for Hopper architecture (H100/H800/RTX 5090), extr
 # Build
 ./build.sh
 
-# Run test
+# Run test with FP16 (default)
 ./build/flash_attention_exec
+
+# Run test with FP8 E4M3
+./build/flash_attention_exec fp8
 ```
 
 ## Build Details
@@ -109,6 +112,35 @@ target_link_libraries(your_app PRIVATE flash_attention_lib)
 | FP8 E4M3  | 128             | SM90a        |
 
 **Note**: BF16 support removed per project requirements.
+
+## Testing
+
+The test program generates random data for both Q, K, and V tensors:
+
+- **FP16 mode**: Random half-precision floating point values in range [-1, 1]
+- **FP8 mode**: Random FP8 E4M3 values in range [-1, 1]
+
+Example output:
+```
+Flash Attention Standalone Test
+================================
+Configuration (Qwen2.5-VL-3B):
+  Data type: FP16
+  Batch size: 1
+  Sequence length Q: 512
+  Sequence length K/V: 512
+  Number of heads: 16
+  Head dimension: 128
+
+Generating random test data...
+  Elements per tensor: 1048576
+  Bytes per tensor: 2097152 (2.0 MB)
+  Generating FP16 data...
+  ✓ Test data generated and copied to device
+
+Running Flash Attention forward pass...
+✓ Flash Attention completed successfully!
+```
 
 ## Troubleshooting
 
