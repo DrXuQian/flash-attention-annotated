@@ -62,10 +62,18 @@ int flash_attention_forward(
     // Create Flash_fwd_params and initialize to zero
     Flash_fwd_params flash_params = {};
 
+    // Set architecture (SM90a for Hopper)
+    flash_params.arch = 90;
+
     // Set data type flags
     flash_params.is_bf16 = (params.dtype == DataType::BF16);
     flash_params.is_e4m3 = (params.dtype == DataType::FP8_E4M3);
     flash_params.is_fp32 = false;
+
+    // Split-KV parameters (no split for now)
+    flash_params.num_splits = 1;
+    flash_params.num_splits_dynamic_ptr = nullptr;
+    flash_params.pack_gqa = false;
 
     // Set pointers
     flash_params.q_ptr = params.q;
