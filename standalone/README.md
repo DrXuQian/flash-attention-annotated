@@ -1,116 +1,140 @@
-# Flash Attention Standalone Executable
+# Flash Attention Standalone
 
-Standalone Flash Attention executable for Hopper (SM90) architecture without PyTorch dependencies.
+Standalone Flash Attention v3 for Hopper architecture (H100/H800/RTX 5090), extracted for easy integration without PyTorch dependencies.
 
 ## Features
-- Flash Attention v3 for Hopper (H100/H800)
-- Support for FP16, BF16, and FP8 (E4M3) data types
-- Optimized for Qwen2.5-VL-3B configuration (16 heads, 128 head_dim)
-- Complete separation compilation to avoid register limit issues
-- No PyTorch/ATen dependencies
 
-## Architecture
-The compilation uses complete kernel separation to avoid register pressure issues:
-- Each kernel configuration (dtype, hdim) is compiled in its own translation unit
-- Allows `setmaxnreg` dynamic register allocation to work properly
-- Matches the compilation behavior of `python setup.py install`
-
-## Directory Structure
-```
-standalone/
-├── CMakeLists.txt           # Main build configuration
-├── src/
-│   ├── flash_api.cu         # API wrapper (no kernel instantiation)
-│   └── main.cpp             # Test executable
-├── kernels/                 # Separated kernel files
-│   ├── kernel_fp16_hdim128.cu
-│   ├── kernel_fp16_hdim256.cu
-│   ├── kernel_bf16_hdim128.cu
-│   ├── kernel_bf16_hdim256.cu
-│   └── kernel_fp8_e4m3_hdim128.cu
-├── include/
-│   └── flash_api.h          # Public API header
-└── generate_kernels.py      # Kernel generation script
-```
+- **Hopper Architecture**: Optimized for SM90a (H100/H800/RTX 5090)
+- **No PyTorch Required**: Pure CUDA/C++ implementation
+- **Official Kernels**: Uses kernel files from `hopper/instantiations/`
+- **FP16 and FP8**: Supports half-precision and FP8 E4M3 formats
+- **Qwen2.5-VL Ready**: Pre-configured for head_dim=128
 
 ## Requirements
-- CUDA 11.8+ (for Hopper support)
+
+- CUDA 11.8 or later
 - CMake 3.18+
-- C++17 compiler
-- Hopper GPU (SM90/SM90a)
+- NVIDIA GPU with Hopper architecture (compute capability 9.0)
+- GCC/G++ with C++17 support
 
-## Build Instructions
+## Quick Start
 
-### 1. Generate kernel files
 ```bash
-cd standalone
-python3 generate_kernels.py
+# Build
+./build.sh
+
+# Run test
+./build/flash_attention_exec
 ```
 
-### 2. Configure with CMake
-```bash
-mkdir build
-cd build
-cmake ..
-```
+## Build Details
 
-### 3. Build
-```bash
-make -j4
-```
+The build script:
+1. Checks for kernel files in `../hopper/instantiations/`
+2. Generates kernels if needed using `hopper/generate_kernels.py`
+3. Compiles with CMake using separated compilation strategy
+4. Links all components into `flash_attention_exec`
 
-### 4. Run test
-```bash
-./flash_attention_exec
+### Kernel Files Used
+
+- `flash_fwd_hdim128_fp16_sm90.cu` - FP16, head_dim=128
+- `flash_fwd_hdim128_e4m3_sm90.cu` - FP8 E4M3, head_dim=128
+- `flash_fwd_hdim256_fp16_sm90.cu` - FP16, head_dim=256
+
+### Compilation Strategy
+
+Each kernel is compiled as a separate object library to avoid register limit conflicts. This matches the behavior of `python setup.py install` and allows proper use of Hopper's `setmaxnreg` dynamic register allocation.
+
+## Directory Structure
+
+```
+standalone/
+├── CMakeLists.txt              # Build configuration
+├── build.sh                    # Build script
+├── src/
+│   ├── flash_api.cu            # API wrapper
+│   └── main.cpp                # Example usage
+└── include/
+    └── flash_attention_api.h   # C++ API header
 ```
 
 ## API Usage
 
 ```cpp
-#include "flash_api.h"
+#include "flash_attention_api.h"
 
-// Set up parameters
-flash::FlashAttentionParams params;
-params.q = d_q;          // Device pointer to Q tensor
-params.k = d_k;          // Device pointer to K tensor
-params.v = d_v;          // Device pointer to V tensor
-params.out = d_out;      // Device pointer to output tensor
-
+// Configure parameters
+Flash_fwd_params params;
 params.batch_size = 1;
-params.seqlen_q = 512;
-params.seqlen_k = 512;
 params.num_heads = 16;
-params.num_heads_k = 16;
 params.head_dim = 128;
-
-params.dtype = flash::DataType::FP16;
-params.is_causal = false;
+params.seqlen_q = 1024;
+params.seqlen_k = 1024;
+// ... set Q, K, V, output pointers ...
 
 // Run Flash Attention
-int result = flash::flash_attention_forward(params, stream);
+int status = flash_attention_forward(
+    params.q_ptr,
+    params.k_ptr,
+    params.v_ptr,
+    params.o_ptr,
+    params.batch_size,
+    params.seqlen_q,
+    params.seqlen_k,
+    params.num_heads,
+    params.num_heads_k,
+    params.head_dim,
+    /*is_causal=*/true,
+    /*dtype=*/0,  // 0=FP16, 2=FP8_E4M3
+    /*scale=*/1.0f / sqrtf(128.0f)
+);
+```
+
+## Integration
+
+To use in your project:
+
+```cmake
+# Link the standalone library
+add_executable(your_app main.cpp)
+target_include_directories(your_app PRIVATE ${CMAKE_SOURCE_DIR}/standalone/include)
+target_link_libraries(your_app PRIVATE flash_attention_lib)
 ```
 
 ## Supported Configurations
 
-| Data Type | Head Dimensions | Status |
-|-----------|----------------|--------|
-| FP16      | 128, 256       | ✓      |
-| BF16      | 128, 256       | ✓      |
-| FP8 E4M3  | 128            | ✓      |
+| Data Type | Head Dimensions | Architecture |
+|-----------|-----------------|--------------|
+| FP16      | 128, 256        | SM90a        |
+| FP8 E4M3  | 128             | SM90a        |
 
-## Performance Notes
-
-- The separate compilation strategy ensures optimal register usage
-- Each kernel can use dynamic register reconfiguration (`setmaxnreg`)
-- No register pressure conflicts between different kernel configurations
+**Note**: BF16 support removed per project requirements.
 
 ## Troubleshooting
 
-### Register limit errors
-If you see "too many resources requested for launch", ensure you're using the separate compilation approach as implemented here.
+**Kernel files not found:**
+```bash
+cd ../hopper
+python3 generate_kernels.py
+cd ../standalone
+./build.sh
+```
 
-### setmaxnreg warnings
-The warning "setmaxnreg ignored to maintain compatibility" indicates kernels are not properly separated. This implementation avoids this issue.
+**Register limit errors:**
+This implementation uses separated compilation to prevent register conflicts. Each kernel is compiled in its own translation unit.
 
-## License
-Same as Flash Attention main repository.
+**Undefined reference to prepare_varlen_num_blocks:**
+This is now fixed - `flash_prepare_scheduler.cu` is automatically compiled and linked.
+
+## Technical Notes
+
+- Uses official Flash Attention v3 Hopper kernels
+- Separate compilation prevents register allocation conflicts
+- Includes variable-length sequence support via scheduler
+- Optimized for Qwen2.5-VL-3B (16 heads, head_dim=128)
+
+## References
+
+- [Flash Attention Paper](https://arxiv.org/abs/2205.14135)
+- [Flash Attention v3 (Hopper)](https://arxiv.org/abs/2407.08608)
+- [CUTLASS Library](https://github.com/NVIDIA/cutlass)
