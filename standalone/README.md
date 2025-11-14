@@ -105,10 +105,13 @@ The build script:
 
 ### Kernel Files Used
 
+- `flash_fwd_hdim64_fp16_sm90.cu` - FP16, head_dim=64
+- `flash_fwd_hdim64_e4m3_sm90.cu` - FP8 E4M3, head_dim=64
 - `flash_fwd_hdim96_fp16_sm90.cu` - FP16, head_dim=96
 - `flash_fwd_hdim96_e4m3_sm90.cu` - FP8 E4M3, head_dim=96
 - `flash_fwd_hdim128_fp16_sm90.cu` - FP16, head_dim=128
 - `flash_fwd_hdim128_e4m3_sm90.cu` - FP8 E4M3, head_dim=128
+- `flash_fwd_hdim192_fp16_sm90.cu` - FP16, head_dim=192
 - `flash_fwd_hdim256_fp16_sm90.cu` - FP16, head_dim=256
 
 ### Compilation Strategy
@@ -176,7 +179,7 @@ target_link_libraries(your_app PRIVATE flash_attention_lib)
 | Data Type | Head Dimensions           | Architecture |
 |-----------|---------------------------|--------------|
 | FP16      | 64, 96, 128, 192, 256     | SM90a        |
-| FP8 E4M3  | 96, 128                   | SM90a        |
+| FP8 E4M3  | 64, 96, 128               | SM90a        |
 
 **Note**: BF16 support removed per project requirements.
 

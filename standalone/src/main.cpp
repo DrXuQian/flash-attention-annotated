@@ -158,8 +158,8 @@ int main(int argc, char** argv) {
     }
 
     // Validate FP8 constraints
-    if (dtype == flash::DataType::FP8_E4M3 && head_dim != 96 && head_dim != 128) {
-        std::cerr << "Error: FP8 E4M3 only supports head_dim=96 or 128\n";
+    if (dtype == flash::DataType::FP8_E4M3 && head_dim != 64 && head_dim != 96 && head_dim != 128) {
+        std::cerr << "Error: FP8 E4M3 only supports head_dim=64, 96, or 128\n";
         return 1;
     }
 

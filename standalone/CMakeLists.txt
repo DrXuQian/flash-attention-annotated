@@ -51,10 +51,13 @@ set(CUDA_FLAGS
 
 # Kernel files from hopper/instantiations directory
 set(HOPPER_KERNEL_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim64_fp16_sm90.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim64_e4m3_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim96_fp16_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim96_e4m3_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim128_fp16_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim128_e4m3_sm90.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim192_fp16_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim256_fp16_sm90.cu
 )
 

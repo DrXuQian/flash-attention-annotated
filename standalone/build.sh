@@ -21,10 +21,13 @@ fi
 
 # Check for specific kernel files we need
 REQUIRED_KERNELS=(
+    "flash_fwd_hdim64_fp16_sm90.cu"
+    "flash_fwd_hdim64_e4m3_sm90.cu"
     "flash_fwd_hdim96_fp16_sm90.cu"
     "flash_fwd_hdim96_e4m3_sm90.cu"
     "flash_fwd_hdim128_fp16_sm90.cu"
     "flash_fwd_hdim128_e4m3_sm90.cu"
+    "flash_fwd_hdim192_fp16_sm90.cu"
     "flash_fwd_hdim256_fp16_sm90.cu"
 )
 
