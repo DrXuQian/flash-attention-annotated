@@ -16,17 +16,9 @@
 
 namespace flash {
 
-// External declarations of kernel templates
-// These are defined and instantiated in separate kernel_*.cu files
-// Template parameters: Arch, T, kHeadDim, kHeadDimV, Split, PagedKVNonTMA, Has_softcap, PackGQA
-extern "C" {
-    // Declare kernel functions as external C linkage to avoid name mangling issues
-}
-
-// Template forward declarations (not extern "C" as they are C++ templates)
-template<int Arch, typename T, int kHeadDim, int kHeadDimV,
-         bool Split, bool PagedKVNonTMA, bool Has_softcap, bool PackGQA>
-void run_mha_fwd_(Flash_fwd_params &params, cudaStream_t stream);
+// Note: run_mha_fwd_ template is already declared in hopper/flash.h (line 219)
+// We do NOT redeclare it here to avoid "more than one instance" conflicts
+// The template instantiations are provided by separate kernel files
 
 // Helper to select and call the right kernel
 template<typename DType>
