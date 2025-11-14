@@ -14,11 +14,19 @@ rm -rf build_separated
 mkdir build_separated
 cd build_separated
 
-# Use the fully separated CMakeLists
+# Temporarily use the fully separated CMakeLists
+cp ../CMakeLists_fully_separated.txt ../CMakeLists.txt.tmp
+mv ../CMakeLists.txt ../CMakeLists.txt.original 2>/dev/null || true
+mv ../CMakeLists.txt.tmp ../CMakeLists.txt
+
 echo "Configuring with complete kernel isolation..."
 cmake -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_CUDA_ARCHITECTURES=90 \
-      ../CMakeLists_fully_separated.txt ..
+      ..
+
+# Restore original CMakeLists.txt
+mv ../CMakeLists.txt ../CMakeLists_fully_separated.used
+mv ../CMakeLists.txt.original ../CMakeLists.txt 2>/dev/null || true
 
 echo ""
 echo "Building kernel libraries separately..."
