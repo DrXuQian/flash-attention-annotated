@@ -271,7 +271,7 @@ static void initialize_flash_params(
     flash_params.varlen_sort_batches = false;
     flash_params.tile_count_semaphore_offset = 0;
     flash_params.head_swizzle = false;
-    flash_params.prepare_varlen_pdl = is_varlen && (params.batch_size <= 992);  // PREPARE_VARLEN_MAX_BATCHES_1CTA
+    flash_params.prepare_varlen_pdl = false;  // Disable for now to simplify
 
     // Device properties
     cudaDeviceProp device_prop;
