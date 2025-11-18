@@ -11,7 +11,7 @@
  * This file contains the API wrapper. Kernels are compiled separately.
  ******************************************************************************/
 
-#include "../include/flash_api_v2.h"
+#include "../include/flash_api.h"
 #include "../hopper/flash.h"
 
 #include <cuda_bf16.h>
