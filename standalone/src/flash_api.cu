@@ -186,6 +186,26 @@ int flash_attention_forward(
     flash_params.oaccum_ptr = nullptr;
     flash_params.softmax_lseaccum_ptr = nullptr;
 
+    // Scheduler metadata parameters (CRITICAL for non-varlen kernels)
+    flash_params.tile_count_semaphore = nullptr;
+    flash_params.num_m_blocks_ptr = nullptr;
+    flash_params.num_splits_dynamic_ptr = nullptr;
+    flash_params.varlen_batch_idx_ptr = nullptr;
+    flash_params.num_nheads_in_l2_ptr = nullptr;
+    flash_params.skip_scheduler_metadata_computation = true;  // We're not using varlen
+    flash_params.varlen_sort_batches = false;
+    flash_params.tile_count_semaphore_offset = 0;
+    flash_params.head_swizzle = false;
+    flash_params.prepare_varlen_pdl = false;
+
+    // Get number of SMs on the current device
+    cudaDeviceProp device_prop;
+    int device;
+    cudaGetDevice(&device);
+    cudaGetDeviceProperties(&device_prop, device);
+    flash_params.num_sm = device_prop.multiProcessorCount;
+    flash_params.b_k = params.batch_size;  // For KV cache, same as batch
+
     // Default stream
     if (stream == nullptr) {
         stream = cudaStreamDefault;
