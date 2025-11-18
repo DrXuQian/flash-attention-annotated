@@ -266,7 +266,7 @@ static void initialize_flash_params(
     flash_params.num_splits_dynamic_ptr = nullptr;
     flash_params.varlen_batch_idx_ptr = nullptr;
     flash_params.num_nheads_in_l2_ptr = nullptr;
-    flash_params.skip_scheduler_metadata_computation = !is_varlen;  // Only compute for varlen
+    flash_params.skip_scheduler_metadata_computation = true;  // Skip for now (requires additional memory allocation)
     flash_params.varlen_sort_batches = false;
     flash_params.tile_count_semaphore_offset = 0;
     flash_params.head_swizzle = false;
