@@ -199,12 +199,20 @@ static void initialize_flash_params(
     flash_params.attention_chunk = 0;
 
     // Variable-length sequences
-    flash_params.cu_seqlens_q = params.cu_seqlens_q;
-    flash_params.cu_seqlens_k = params.cu_seqlens_k;
+    if (is_varlen) {
+        flash_params.cu_seqlens_q = params.cu_seqlens_q;
+        flash_params.cu_seqlens_k = params.cu_seqlens_k;
+        flash_params.seqused_q = params.seqused_q;
+        flash_params.seqused_k = params.seqused_k;
+        flash_params.leftpad_k = params.leftpad_k;
+    } else {
+        flash_params.cu_seqlens_q = nullptr;
+        flash_params.cu_seqlens_k = nullptr;
+        flash_params.seqused_q = nullptr;
+        flash_params.seqused_k = nullptr;
+        flash_params.leftpad_k = nullptr;
+    }
     flash_params.cu_seqlens_knew = nullptr;
-    flash_params.seqused_q = params.seqused_q;
-    flash_params.seqused_k = params.seqused_k;
-    flash_params.leftpad_k = params.leftpad_k;
 
     // FP8 descaling
     flash_params.q_descale_ptr = params.q_descale_ptr;
