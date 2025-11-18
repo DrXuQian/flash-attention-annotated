@@ -216,6 +216,8 @@ int main(int argc, char** argv) {
     // ✅ Variable-length sequences
     params.cu_seqlens_q = d_cu_seqlens_q;
     params.cu_seqlens_k = d_cu_seqlens_k;
+    params.max_seqlen_q = max_seqlen_q;
+    params.max_seqlen_k = max_seqlen_k;
     params.total_q = total_q;
     params.total_k = total_k;
 

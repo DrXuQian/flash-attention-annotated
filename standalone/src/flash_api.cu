@@ -141,8 +141,8 @@ static void initialize_flash_params(
     flash_params.h = params.num_heads;
     flash_params.h_k = params.num_heads_k;
     flash_params.d = params.head_dim;
-    flash_params.seqlen_q = is_varlen ? 0 : params.seqlen_q;  // Ignored if varlen
-    flash_params.seqlen_k = is_varlen ? 0 : params.seqlen_k;
+    flash_params.seqlen_q = is_varlen ? params.max_seqlen_q : params.seqlen_q;
+    flash_params.seqlen_k = is_varlen ? params.max_seqlen_k : params.seqlen_k;
     flash_params.seqlen_knew = 0;
 
     // Total sequences (critical for varlen)
@@ -151,8 +151,8 @@ static void initialize_flash_params(
     flash_params.total_knew = 0;
 
     // Rounded dimensions
-    flash_params.seqlen_q_rounded = ((params.seqlen_q + 128 - 1) / 128) * 128;
-    flash_params.seqlen_k_rounded = ((params.seqlen_k + 128 - 1) / 128) * 128;
+    flash_params.seqlen_q_rounded = ((flash_params.seqlen_q + 128 - 1) / 128) * 128;
+    flash_params.seqlen_k_rounded = ((flash_params.seqlen_k + 128 - 1) / 128) * 128;
     flash_params.d_rounded = ((params.head_dim + 8 - 1) / 8) * 8;
     flash_params.dv = params.head_dim;
     flash_params.dv_rounded = flash_params.d_rounded;

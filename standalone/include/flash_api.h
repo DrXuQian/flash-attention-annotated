@@ -60,10 +60,12 @@ struct FlashAttentionParams {
     int* cu_seqlens_k = nullptr;  // [batch + 1] cumulative sequence lengths for K/V
 
     // When cu_seqlens_q/k are set:
-    // - seqlen_q/k are ignored
-    // - total_q and total_k must be set (sum of all sequence lengths)
-    int total_q = 0;     // Total number of query tokens across all sequences
-    int total_k = 0;     // Total number of key/value tokens across all sequences
+    // - seqlen_q/k are ignored for input/output shapes
+    // - max_seqlen_q/k and total_q/k must be set
+    int max_seqlen_q = 0;  // Maximum sequence length in Q (required for varlen)
+    int max_seqlen_k = 0;  // Maximum sequence length in K/V (required for varlen)
+    int total_q = 0;       // Total number of query tokens across all sequences
+    int total_k = 0;       // Total number of key/value tokens across all sequences
 
     // ✅ SUPPORTED: Actual sequence lengths (for padding)
     int* seqused_q = nullptr;  // [batch] actual length of each Q sequence (if < seqlen_q)
