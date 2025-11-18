@@ -304,14 +304,14 @@ static int dispatch_headdim(
             run_mha_fwd_<90, DType, 128, 128, false, false, false, false>(
                 flash_params, stream);
             return 0;
-        case 192:
-            run_mha_fwd_<90, DType, 192, 192, false, false, false, false>(
-                flash_params, stream);
-            return 0;
-        case 256:
-            run_mha_fwd_<90, DType, 256, 256, false, false, false, false>(
-                flash_params, stream);
-            return 0;
+        // case 192:
+        //     run_mha_fwd_<90, DType, 192, 192, false, false, false, false>(
+        //         flash_params, stream);
+        //     return 0;
+        // case 256:
+        //     run_mha_fwd_<90, DType, 256, 256, false, false, false, false>(
+        //         flash_params, stream);
+        //     return 0;
         default:
             std::cerr << "Unsupported head_dim: " << head_dim << std::endl;
             return -1;

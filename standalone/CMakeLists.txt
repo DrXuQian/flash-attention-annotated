@@ -57,8 +57,11 @@ set(HOPPER_KERNEL_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim96_e4m3_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim128_fp16_sm90.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim128_e4m3_sm90.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim192_fp16_sm90.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim256_fp16_sm90.cu
+    # Note: 192 and 256 are commented out in flash_api.cu to avoid unnecessary linking
+    # ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim192_fp16_sm90.cu
+    # ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim192_e4m3_sm90.cu
+    # ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim256_fp16_sm90.cu
+    # ${CMAKE_CURRENT_SOURCE_DIR}/../hopper/instantiations/flash_fwd_hdim256_e4m3_sm90.cu
 )
 
 # Check which files exist
