@@ -1,4 +1,4 @@
-#include "../include/flash_api_v2.h"
+#include "../include/flash_api.h"
 #include <iostream>
 #include <vector>
 #include <random>
@@ -9,26 +9,24 @@
 /**
  * Test case matching the PyTorch configuration:
  *
- * max_seqlen_q = max_seqlen_k = 1680
- * batch_size = 84
+ * batch_size = 1
  * nheads = 16
- * nheads_k = 16
+ * nheads_k = 2  (GQA with 16:2 ratio)
  * d = 128
- * seqlen_q = 5040 (total tokens across all sequences)
- * seqlen_k = 5040
- * causal = False
- * dtype = torch.float8_e4m3fn
+ * seqlen_q = 1 (DECODE mode)
+ * seqlen_k = 2048
+ * causal = True
+ * dtype = torch.float16
  *
- * Q, K, V shape: [seqlen, nheads, d] in varlen format
- * cu_seqlens shape: [batch + 1]
- * descale shape: [batch, nheads]
+ * Q, K, V shape: [batch, seqlen, nheads, d]
+ * Non-varlen (cu_seqlens = None)
  */
 
 void print_test_info() {
     std::cout << "\n";
     std::cout << "================================================================\n";
-    std::cout << "  FP8 E4M3 Variable-length Attention Test\n";
-    std::cout << "  (Matching PyTorch flash_attn_varlen_func configuration)\n";
+    std::cout << "  FP16 Decode GQA Attention Test\n";
+    std::cout << "  (Matching PyTorch flash_attn_func configuration)\n";
     std::cout << "================================================================\n";
     std::cout << "\n";
 }
@@ -40,77 +38,24 @@ int main(int argc, char** argv) {
     // CONFIGURATION (matching PyTorch testcase)
     // ========================================================================
 
-    const int max_seqlen_q = 1680;
-    const int max_seqlen_k = 1680;
-    const int batch_size = 84;
+    const int batch_size = 1;
+    const int seqlen_q = 1;      // DECODE mode: single query token
+    const int seqlen_k = 2048;   // Context length
     const int nheads = 16;
-    const int nheads_k = 16;  // MHA
+    const int nheads_k = 2;  // GQA: 16:2 ratio
     const int head_dim = 128;
-    const int total_q = 5040;  // Sum of all sequence lengths
-    const int total_k = 5040;
-    const bool causal = false;
+    const bool causal = true;
 
     std::cout << "Configuration:\n";
     std::cout << "  Batch size: " << batch_size << "\n";
-    std::cout << "  Max seqlen Q: " << max_seqlen_q << "\n";
-    std::cout << "  Max seqlen K: " << max_seqlen_k << "\n";
-    std::cout << "  Total tokens Q: " << total_q << "\n";
-    std::cout << "  Total tokens K: " << total_k << "\n";
+    std::cout << "  Seqlen Q: " << seqlen_q << " (DECODE mode)\n";
+    std::cout << "  Seqlen K: " << seqlen_k << "\n";
     std::cout << "  Num heads Q: " << nheads << "\n";
-    std::cout << "  Num heads K: " << nheads_k << "\n";
+    std::cout << "  Num heads K: " << nheads_k << " (GQA " << nheads << ":" << nheads_k << ")\n";
     std::cout << "  Head dim: " << head_dim << "\n";
     std::cout << "  Causal: " << (causal ? "true" : "false") << "\n";
-    std::cout << "  Data type: FP8 E4M3\n";
+    std::cout << "  Data type: FP16\n";
     std::cout << "\n";
-
-    // ========================================================================
-    // CUMULATIVE SEQUENCE LENGTHS (cu_seqlens)
-    // ========================================================================
-
-    // From PyTorch testcase (max_seqlen = 1680 branch)
-    std::vector<int> h_cu_seqlens_q = {
-        0, 64, 128, 192, 256, 320, 384, 448, 512, 576, 640, 704,
-        768, 832, 896, 960, 1024, 1088, 1152, 1216, 1280, 1344, 1392, 1440,
-        1488, 1536, 1584, 1632, 1680, 1744, 1808, 1872, 1936, 2000, 2064, 2128,
-        2192, 2256, 2320, 2384, 2448, 2512, 2576, 2640, 2704, 2768, 2832, 2896,
-        2960, 3024, 3072, 3120, 3168, 3216, 3264, 3312, 3360, 3424, 3488, 3552,
-        3616, 3680, 3744, 3808, 3872, 3936, 4000, 4064, 4128, 4192, 4256, 4320,
-        4384, 4448, 4512, 4576, 4640, 4704, 4752, 4800, 4848, 4896, 4944, 4992,
-        5040
-    };
-
-    // K uses the same cu_seqlens as Q in this test
-    std::vector<int> h_cu_seqlens_k = h_cu_seqlens_q;
-
-    // Verify batch size matches
-    if (h_cu_seqlens_q.size() != batch_size + 1) {
-        std::cerr << "Error: cu_seqlens_q size (" << h_cu_seqlens_q.size()
-                  << ") != batch_size + 1 (" << batch_size + 1 << ")\n";
-        return -1;
-    }
-
-    // Verify total tokens match
-    if (h_cu_seqlens_q.back() != total_q) {
-        std::cerr << "Error: cu_seqlens_q last element (" << h_cu_seqlens_q.back()
-                  << ") != total_q (" << total_q << ")\n";
-        return -1;
-    }
-
-    std::cout << "Sequence lengths per batch:\n";
-    std::cout << "  First 5 sequences: ";
-    for (int i = 0; i < std::min(5, batch_size); i++) {
-        int seqlen = h_cu_seqlens_q[i + 1] - h_cu_seqlens_q[i];
-        std::cout << seqlen;
-        if (i < 4 && i < batch_size - 1) std::cout << ", ";
-    }
-    std::cout << "\n";
-    std::cout << "  Last 5 sequences: ";
-    for (int i = std::max(0, batch_size - 5); i < batch_size; i++) {
-        int seqlen = h_cu_seqlens_q[i + 1] - h_cu_seqlens_q[i];
-        std::cout << seqlen;
-        if (i < batch_size - 1) std::cout << ", ";
-    }
-    std::cout << "\n\n";
 
     // ========================================================================
     // ALLOCATE AND GENERATE DATA
@@ -118,19 +63,19 @@ int main(int argc, char** argv) {
 
     std::cout << "Allocating memory...\n";
 
-    // Q, K, V: [total_tokens, nheads, head_dim] in FP8 E4M3
-    size_t q_elements = total_q * nheads * head_dim;
-    size_t k_elements = total_k * nheads_k * head_dim;
-    size_t v_elements = total_k * nheads_k * head_dim;
+    // Q, K, V: [batch, seqlen, nheads, head_dim] in FP16
+    size_t q_elements = batch_size * seqlen_q * nheads * head_dim;
+    size_t k_elements = batch_size * seqlen_k * nheads_k * head_dim;
+    size_t v_elements = batch_size * seqlen_k * nheads_k * head_dim;
 
-    std::cout << "  Q: " << (q_elements * sizeof(__nv_fp8_e4m3) / 1024.0 / 1024.0) << " MB\n";
-    std::cout << "  K: " << (k_elements * sizeof(__nv_fp8_e4m3) / 1024.0 / 1024.0) << " MB\n";
-    std::cout << "  V: " << (v_elements * sizeof(__nv_fp8_e4m3) / 1024.0 / 1024.0) << " MB\n";
+    std::cout << "  Q: " << (q_elements * sizeof(__half) / 1024.0 / 1024.0) << " MB\n";
+    std::cout << "  K: " << (k_elements * sizeof(__half) / 1024.0 / 1024.0) << " MB\n";
+    std::cout << "  V: " << (v_elements * sizeof(__half) / 1024.0 / 1024.0) << " MB\n";
 
     // Generate host data
-    std::vector<__nv_fp8_e4m3> h_q(q_elements);
-    std::vector<__nv_fp8_e4m3> h_k(k_elements);
-    std::vector<__nv_fp8_e4m3> h_v(v_elements);
+    std::vector<__half> h_q(q_elements);
+    std::vector<__half> h_k(k_elements);
+    std::vector<__half> h_v(v_elements);
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -140,17 +85,17 @@ int main(int argc, char** argv) {
 
     // Q: all ones (like PyTorch testcase)
     for (size_t i = 0; i < q_elements; i++) {
-        h_q[i] = __nv_fp8_e4m3(1.0f);
+        h_q[i] = __float2half(1.0f);
     }
 
     // K: all ones (like PyTorch testcase)
     for (size_t i = 0; i < k_elements; i++) {
-        h_k[i] = __nv_fp8_e4m3(1.0f);
+        h_k[i] = __float2half(1.0f);
     }
 
     // V: random (like PyTorch testcase)
     for (size_t i = 0; i < v_elements; i++) {
-        h_v[i] = __nv_fp8_e4m3(dis(gen));
+        h_v[i] = __float2half(dis(gen));
     }
 
     // ========================================================================
@@ -159,43 +104,19 @@ int main(int argc, char** argv) {
 
     void *d_q, *d_k, *d_v, *d_out;
     float *d_lse;
-    int *d_cu_seqlens_q, *d_cu_seqlens_k;
-    float *d_descale_q, *d_descale_k, *d_descale_v;
 
-    cudaMalloc(&d_q, q_elements * sizeof(__nv_fp8_e4m3));
-    cudaMalloc(&d_k, k_elements * sizeof(__nv_fp8_e4m3));
-    cudaMalloc(&d_v, v_elements * sizeof(__nv_fp8_e4m3));
+    cudaMalloc(&d_q, q_elements * sizeof(__half));
+    cudaMalloc(&d_k, k_elements * sizeof(__half));
+    cudaMalloc(&d_v, v_elements * sizeof(__half));
     cudaMalloc(&d_out, q_elements * sizeof(__half));  // Output is FP16
-    cudaMalloc(&d_lse, total_q * nheads * sizeof(float));
-    cudaMalloc(&d_cu_seqlens_q, (batch_size + 1) * sizeof(int));
-    cudaMalloc(&d_cu_seqlens_k, (batch_size + 1) * sizeof(int));
-
-    // Descale: [batch, nheads] - per-batch, per-head scaling
-    cudaMalloc(&d_descale_q, batch_size * nheads * sizeof(float));
-    cudaMalloc(&d_descale_k, batch_size * nheads_k * sizeof(float));
-    cudaMalloc(&d_descale_v, batch_size * nheads_k * sizeof(float));
+    cudaMalloc(&d_lse, batch_size * seqlen_q * nheads * sizeof(float));
 
     std::cout << "Copying data to device...\n";
 
     // Copy Q, K, V
-    cudaMemcpy(d_q, h_q.data(), q_elements * sizeof(__nv_fp8_e4m3), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_k, h_k.data(), k_elements * sizeof(__nv_fp8_e4m3), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_v, h_v.data(), v_elements * sizeof(__nv_fp8_e4m3), cudaMemcpyHostToDevice);
-
-    // Copy cu_seqlens
-    cudaMemcpy(d_cu_seqlens_q, h_cu_seqlens_q.data(),
-               (batch_size + 1) * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cu_seqlens_k, h_cu_seqlens_k.data(),
-               (batch_size + 1) * sizeof(int), cudaMemcpyHostToDevice);
-
-    // Initialize descale factors to 1.0 (like PyTorch testcase: torch.ones)
-    std::vector<float> h_descale(batch_size * nheads, 1.0f);
-    cudaMemcpy(d_descale_q, h_descale.data(),
-               batch_size * nheads * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_descale_k, h_descale.data(),
-               batch_size * nheads_k * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_descale_v, h_descale.data(),
-               batch_size * nheads_k * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_q, h_q.data(), q_elements * sizeof(__half), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_k, h_k.data(), k_elements * sizeof(__half), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_v, h_v.data(), v_elements * sizeof(__half), cudaMemcpyHostToDevice);
 
     std::cout << "Done.\n\n";
 
@@ -216,31 +137,22 @@ int main(int argc, char** argv) {
 
     // Dimensions
     params.batch_size = batch_size;
-    params.seqlen_q = max_seqlen_q;  // Will be ignored due to varlen
-    params.seqlen_k = max_seqlen_k;  // Will be ignored due to varlen
+    params.seqlen_q = seqlen_q;
+    params.seqlen_k = seqlen_k;
     params.num_heads = nheads;
     params.num_heads_k = nheads_k;
     params.head_dim = head_dim;
 
-    // ✅ Variable-length sequences
-    params.cu_seqlens_q = d_cu_seqlens_q;
-    params.cu_seqlens_k = d_cu_seqlens_k;
-    params.total_q = total_q;
-    params.total_k = total_k;
+    // Non-varlen (cu_seqlens = nullptr)
+    params.cu_seqlens_q = nullptr;
+    params.cu_seqlens_k = nullptr;
+    params.total_q = 0;
+    params.total_k = 0;
 
-    // ✅ FP8 descaling (per-batch, per-head)
-    params.q_descale_ptr = d_descale_q;
-    params.k_descale_ptr = d_descale_k;
-    params.v_descale_ptr = d_descale_v;
-
-    // Descale strides: [batch, nheads]
-    // Layout: descale[batch_idx * nheads + head_idx]
-    params.q_descale_batch_stride = nheads;
-    params.q_descale_head_stride = 1;
-    params.k_descale_batch_stride = nheads_k;
-    params.k_descale_head_stride = 1;
-    params.v_descale_batch_stride = nheads_k;
-    params.v_descale_head_stride = 1;
+    // No FP8 descaling for FP16
+    params.q_descale_ptr = nullptr;
+    params.k_descale_ptr = nullptr;
+    params.v_descale_ptr = nullptr;
 
     // Attention parameters
     params.is_causal = causal;
@@ -251,8 +163,8 @@ int main(int argc, char** argv) {
     std::cout << "  Softmax scale: " << softmax_scale << "\n";
 
     // Data type
-    params.dtype = flash::DataType::FP8_E4M3;
-    params.mode = flash::AttentionMode::VARLEN_PREFILL;
+    params.dtype = flash::DataType::FP16;
+    params.mode = flash::AttentionMode::DECODE;
 
     std::cout << "Done.\n\n";
 
@@ -312,7 +224,7 @@ int main(int argc, char** argv) {
 
         // Calculate FLOPS (approximate)
         // Attention FLOPS ≈ 4 * batch * seqlen_q * seqlen_k * nheads * head_dim
-        double flops = 4.0 * total_q * total_k * nheads * head_dim;
+        double flops = 4.0 * batch_size * seqlen_q * seqlen_k * nheads * head_dim;
         double tflops = (flops / (elapsed_ms / 1000.0)) / 1e12;
         std::cout << "  Throughput: " << tflops << " TFLOPS\n";
 
@@ -336,7 +248,7 @@ int main(int argc, char** argv) {
         std::cout << "Verifying output (basic sanity check)...\n";
 
         // Copy a small portion of output back to host
-        const int check_tokens = std::min(10, total_q);
+        const int check_tokens = std::min(10, seqlen_q);
         std::vector<__half> h_out(check_tokens * nheads * head_dim);
         cudaMemcpy(h_out.data(), d_out,
                    check_tokens * nheads * head_dim * sizeof(__half),
@@ -378,11 +290,6 @@ int main(int argc, char** argv) {
     cudaFree(d_v);
     cudaFree(d_out);
     cudaFree(d_lse);
-    cudaFree(d_cu_seqlens_q);
-    cudaFree(d_cu_seqlens_k);
-    cudaFree(d_descale_q);
-    cudaFree(d_descale_k);
-    cudaFree(d_descale_v);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
     cudaStreamDestroy(stream);

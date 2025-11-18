@@ -149,16 +149,95 @@ set_target_properties(flash_attention_exec PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
+# Test executable for FP8 varlen with max_seqlen=1680 (3 sequences)
+add_executable(test_fp8_varlen_1680
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_fp8_varlen_1680.cpp
+    $<TARGET_OBJECTS:flash_api>
+    $<TARGET_OBJECTS:flash_scheduler>
+    ${KERNEL_OBJECTS}
+)
+
+target_link_libraries(test_fp8_varlen_1680 PRIVATE
+    CUDA::cudart
+    CUDA::cuda_driver
+)
+
+set_target_properties(test_fp8_varlen_1680 PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# Test executable for FP8 varlen with max_seqlen=64
+add_executable(test_fp8_varlen_64
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_fp8_varlen_64.cpp
+    $<TARGET_OBJECTS:flash_api>
+    $<TARGET_OBJECTS:flash_scheduler>
+    ${KERNEL_OBJECTS}
+)
+
+target_link_libraries(test_fp8_varlen_64 PRIVATE
+    CUDA::cudart
+    CUDA::cuda_driver
+)
+
+set_target_properties(test_fp8_varlen_64 PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# Test executable for FP16 causal GQA
+add_executable(test_fp16_causal_gqa
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_fp16_causal_gqa.cpp
+    $<TARGET_OBJECTS:flash_api>
+    $<TARGET_OBJECTS:flash_scheduler>
+    ${KERNEL_OBJECTS}
+)
+
+target_link_libraries(test_fp16_causal_gqa PRIVATE
+    CUDA::cudart
+    CUDA::cuda_driver
+)
+
+set_target_properties(test_fp16_causal_gqa PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# Test executable for FP16 decode GQA
+add_executable(test_fp16_decode_gqa
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_fp16_decode_gqa.cpp
+    $<TARGET_OBJECTS:flash_api>
+    $<TARGET_OBJECTS:flash_scheduler>
+    ${KERNEL_OBJECTS}
+)
+
+target_link_libraries(test_fp16_decode_gqa PRIVATE
+    CUDA::cudart
+    CUDA::cuda_driver
+)
+
+set_target_properties(test_fp16_decode_gqa PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
 # ============================================================================
 # Print configuration
 # ============================================================================
 
 message(STATUS "")
-message(STATUS "Flash Attention Standalone (Using Hopper Kernels)")
+message(STATUS "Flash Attention Standalone")
 message(STATUS "  CUDA Version: ${CUDAToolkit_VERSION}")
 message(STATUS "  Architecture: SM90a (Hopper)")
-message(STATUS "  Kernel count: ${CMAKE_CURRENT_LIST_LENGTH}")
 message(STATUS "")
-message(STATUS "Using official kernel files from hopper/instantiations/")
-message(STATUS "This ensures compatibility with python setup.py install")
+message(STATUS "Targets:")
+message(STATUS "  - flash_attention_exec: Main test (3 cases)")
+message(STATUS "  - test_fp8_varlen_1680: FP8 varlen test (max_seqlen=1680, 3 seqs)")
+message(STATUS "  - test_fp8_varlen_64: FP8 varlen test (max_seqlen=64, 84 seqs)")
+message(STATUS "  - test_fp16_causal_gqa: FP16 causal GQA prefill (seqlen=1285, 16:2 GQA)")
+message(STATUS "  - test_fp16_decode_gqa: FP16 decode GQA (seqlen_q=1, seqlen_k=2048, 16:2 GQA)")
 message(STATUS "")
