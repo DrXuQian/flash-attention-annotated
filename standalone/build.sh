@@ -69,12 +69,35 @@ make -j4
 
 echo ""
 echo "========================================"
-if [ -f "flash_attention_exec" ]; then
-    echo "✓ Build successful!"
+echo "Build Results:"
+echo "========================================"
+
+# Check all executables
+EXECUTABLES=(
+    "flash_attention_exec"
+    "test_fp8_varlen_1680"
+    "test_fp8_varlen_64"
+    "test_fp16_causal_gqa"
+    "test_fp16_decode_gqa"
+)
+
+BUILD_SUCCESS=true
+for exe in "${EXECUTABLES[@]}"; do
+    if [ -f "$exe" ]; then
+        echo "  ✓ $exe"
+    else
+        echo "  ✗ $exe (missing)"
+        BUILD_SUCCESS=false
+    fi
+done
+
+echo ""
+if [ "$BUILD_SUCCESS" = true ]; then
+    echo "✓ All executables built successfully!"
     echo ""
-    echo "Executable: $(pwd)/flash_attention_exec"
+    echo "Build directory: $(pwd)"
 else
-    echo "✗ Build failed"
+    echo "✗ Some executables failed to build"
     exit 1
 fi
 echo "========================================"
