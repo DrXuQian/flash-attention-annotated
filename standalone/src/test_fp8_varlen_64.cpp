@@ -170,8 +170,9 @@ int main(int argc, char** argv) {
     cudaMalloc(&d_cu_seqlens_q, (batch_size + 1) * sizeof(int));
     cudaMalloc(&d_cu_seqlens_k, (batch_size + 1) * sizeof(int));
 
-    // Descale: [batch, nheads] - per-batch, per-head scaling
-    cudaMalloc(&d_descale_q, batch_size * nheads * sizeof(float));
+    // Descale: [batch, nheads_k] - per-batch, per-head scaling
+    // NOTE: All descales (including Q) use nheads_k, not nheads
+    cudaMalloc(&d_descale_q, batch_size * nheads_k * sizeof(float));
     cudaMalloc(&d_descale_k, batch_size * nheads_k * sizeof(float));
     cudaMalloc(&d_descale_v, batch_size * nheads_k * sizeof(float));
 
@@ -189,9 +190,9 @@ int main(int argc, char** argv) {
                (batch_size + 1) * sizeof(int), cudaMemcpyHostToDevice);
 
     // Initialize descale factors to 1.0 (like PyTorch testcase: torch.ones)
-    std::vector<float> h_descale(batch_size * nheads, 1.0f);
+    std::vector<float> h_descale(batch_size * nheads_k, 1.0f);
     cudaMemcpy(d_descale_q, h_descale.data(),
-               batch_size * nheads * sizeof(float), cudaMemcpyHostToDevice);
+               batch_size * nheads_k * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_descale_k, h_descale.data(),
                batch_size * nheads_k * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_descale_v, h_descale.data(),
@@ -235,9 +236,10 @@ int main(int argc, char** argv) {
     params.k_descale_ptr = d_descale_k;
     params.v_descale_ptr = d_descale_v;
 
-    // Descale strides: [batch, nheads]
-    // Layout: descale[batch_idx * nheads + head_idx]
-    params.q_descale_batch_stride = nheads;
+    // Descale strides: [batch, nheads_k]
+    // Layout: descale[batch_idx * nheads_k + head_idx]
+    // NOTE: All descales use nheads_k stride, including Q
+    params.q_descale_batch_stride = nheads_k;
     params.q_descale_head_stride = 1;
     params.k_descale_batch_stride = nheads_k;
     params.k_descale_head_stride = 1;
