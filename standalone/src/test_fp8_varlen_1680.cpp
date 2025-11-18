@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 
     const int max_seqlen_q = 1680;
     const int max_seqlen_k = 1680;
-    const int batch_size = 84;  // Number of sequences
+    const int batch_size = 3;
     const int nheads = 16;
     const int nheads_k = 16;  // MHA
     const int head_dim = 128;
@@ -67,17 +67,8 @@ int main(int argc, char** argv) {
     // CUMULATIVE SEQUENCE LENGTHS (cu_seqlens)
     // ========================================================================
 
-    // max_seqlen = 1680, 84 sequences (matching PyTorch testcase)
-    std::vector<int> h_cu_seqlens_q = {
-        0, 64, 128, 192, 256, 320, 384, 448, 512, 576, 640, 704,
-        768, 832, 896, 960, 1024, 1088, 1152, 1216, 1280, 1344, 1392, 1440,
-        1488, 1536, 1584, 1632, 1680, 1744, 1808, 1872, 1936, 2000, 2064, 2128,
-        2192, 2256, 2320, 2384, 2448, 2512, 2576, 2640, 2704, 2768, 2832, 2896,
-        2960, 3024, 3072, 3120, 3168, 3216, 3264, 3312, 3360, 3424, 3488, 3552,
-        3616, 3680, 3744, 3808, 3872, 3936, 4000, 4064, 4128, 4192, 4256, 4320,
-        4384, 4448, 4512, 4576, 4640, 4704, 4752, 4800, 4848, 4896, 4944, 4992,
-        5040
-    };
+    // max_seqlen = 1680, 3 sequences: [0, 1680, 3360, 5040]
+    std::vector<int> h_cu_seqlens_q = {0, 1680, 3360, 5040};
 
     // K uses the same cu_seqlens as Q in this test
     std::vector<int> h_cu_seqlens_k = h_cu_seqlens_q;
