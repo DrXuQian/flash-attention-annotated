@@ -387,6 +387,14 @@ int flash_attention_forward(
     return result;
 }
 
+// Forward declare debug function
+extern void print_flash_fwd_params(const Flash_fwd_params& p, const char* label);
+
+void print_flash_fwd_params(const void* flash_params_ptr, const char* label) {
+    const Flash_fwd_params* p = static_cast<const Flash_fwd_params*>(flash_params_ptr);
+    print_flash_fwd_params(*p, label);
+}
+
 size_t get_workspace_size(const FlashAttentionParams& params) {
     // Flash Attention v3 doesn't require workspace for forward pass
     return 0;

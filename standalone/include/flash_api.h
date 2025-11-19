@@ -225,6 +225,12 @@ int flash_attention_forward(
 );
 
 /**
+ * Debug: Print all Flash_fwd_params for comparison
+ * Useful for debugging differences between PyTorch and standalone versions
+ */
+void print_flash_fwd_params(const void* flash_params_ptr, const char* label);
+
+/**
  * Get workspace size needed (returns 0 for FA3 forward pass)
  */
 size_t get_workspace_size(const FlashAttentionParams& params);
