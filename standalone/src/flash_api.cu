@@ -271,15 +271,16 @@ static void initialize_flash_params(
     // Scheduler metadata (CRITICAL!)
     flash_params.tile_count_semaphore = nullptr;
     flash_params.num_m_blocks_ptr = nullptr;
-    // For varlen, use dynamic splits (set to (int*)1 as a flag, not actual pointer)
-    flash_params.num_splits_dynamic_ptr = is_varlen ? reinterpret_cast<int*>(1) : nullptr;
+    // PyTorch uses dynamic splits even for non-varlen (use_prepare_varlen=true)
+    bool use_prepare_varlen = true;
+    flash_params.prepare_varlen_pdl = use_prepare_varlen && (params.batch_size <= 992); // PREPARE_VARLEN_MAX_BATCHES_1CTA
+    flash_params.num_splits_dynamic_ptr = use_prepare_varlen ? reinterpret_cast<int*>(1) : nullptr;
     flash_params.varlen_batch_idx_ptr = nullptr;
     flash_params.num_nheads_in_l2_ptr = nullptr;
-    flash_params.skip_scheduler_metadata_computation = true;  // Skip metadata computation
+    flash_params.skip_scheduler_metadata_computation = false;  // PyTorch default: false (unless scheduler_metadata provided)
     flash_params.varlen_sort_batches = false;
     flash_params.tile_count_semaphore_offset = 0;
     flash_params.head_swizzle = false;
-    flash_params.prepare_varlen_pdl = false;  // Disable for now to simplify
 
     // Device properties
     cudaDeviceProp device_prop;
